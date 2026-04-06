@@ -43,15 +43,19 @@ def download_video():
             return jsonify({'success': False, 'error': 'URL não fornecida'}), 400
         
         ydl_opts = {
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'format': 'bv*+ba/b',  # Melhor vídeo + melhor áudio, ou melhor disponível
             'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
             'noplaylist': not is_playlist,
-            'progress_hooks': [],
             'merge_output_format': 'mp4',
-            'postprocessors': [{
-                'key': 'FFmpegVideoConvertor',
-                'preferedformat': 'mp4',
-            }],
+            'postprocessors': [
+                {
+                    'key': 'FFmpegVideoConvertor',
+                    'preferedformat': 'mp4',
+                },
+                {
+                    'key': 'FFmpegMetadata',
+                }
+            ],
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'extractor_args': {
                 'youtube': {
