@@ -34,6 +34,16 @@ def download_video():
                 'key': 'FFmpegVideoConvertor',
                 'preferedformat': 'mp4',
             }],
+            # Opções para evitar detecção de bot
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web'],
+                    'player_skip': ['webpage', 'configs'],
+                }
+            },
+            'nocheckcertificate': True,
+            'age_limit': None,
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
