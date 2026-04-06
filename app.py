@@ -181,6 +181,77 @@ def list_downloads():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/logs')
+def view_logs():
+    try:
+        log_file = '/var/www/youtube-downloader/youtube-downloader.log'
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as f:
+                # Últimas 200 linhas
+                lines = f.readlines()[-200:]
+                log_content = ''.join(lines)
+        else:
+            log_content = 'Nenhum log ainda. Faça um download primeiro.'
+        
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>📊 Logs do Sistema</title>
+            <style>
+                body {{ 
+                    background: #1e1e1e; 
+                    color: #d4d4d4; 
+                    font-family: 'Consolas', 'Monaco', monospace;
+                    padding: 20px;
+                }}
+                pre {{
+                    background: #252526;
+                    padding: 20px;
+                    border-radius: 8px;
+                    overflow-x: auto;
+                    border: 1px solid #3e3e3e;
+                    line-height: 1.5;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    margin-bottom: 20px;
+                }}
+                .refresh {{
+                    background: #007acc;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    margin-bottom: 20px;
+                }}
+                .refresh:hover {{ background: #005a9e; }}
+            </style>
+            <script>
+                function refreshLogs() {{
+                    location.reload();
+                }}
+                // Auto-refresh a cada 5 segundos
+                setTimeout(refreshLogs, 5000);
+            </script>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📊 Logs do YouTube Downloader</h1>
+                <p>Últimas 200 linhas | Auto-refresh a cada 5 segundos</p>
+            </div>
+            <button class="refresh" onclick="refreshLogs()">🔄 Atualizar Agora</button>
+            <pre>{log_content}</pre>
+        </body>
+        </html>
+        """
+    except Exception as e:
+        return f"Erro ao ler logs: {str(e)}", 500
+
 if __name__ == '__main__':
     print(f"\n🎬 YouTube Downloader iniciado!")
     print(f"📁 Vídeos serão salvos em: {DOWNLOAD_FOLDER}")
