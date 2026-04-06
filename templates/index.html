@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📹 YouTube Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 15px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .downloads-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .downloads-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .download-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .download-item:hover {
+            background: #e9ecef;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .file-size {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .folder-path {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #1565c0;
+            word-break: break-all;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📹 YouTube Downloader</h1>
+        <p class="subtitle">Baixe vídeos e playlists do YouTube em MP4</p>
+
+        <div class="info-box">
+            💡 <strong>Dica:</strong> Os vídeos serão salvos na pasta Downloads automaticamente!
+        </div>
+
+        <div class="input-group">
+            <label for="url">🔗 Cole a URL do YouTube:</label>
+            <input 
+                type="text" 
+                id="url" 
+                placeholder="https://www.youtube.com/watch?v=..."
+            >
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="playlist">
+            <label for="playlist">📋 É uma playlist completa?</label>
+        </div>
+
+        <button onclick="downloadVideo()">⬇️ Baixar Vídeo</button>
+        <button class="btn-secondary" onclick="listDownloads()">📁 Ver Downloads</button>
+
+        <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #667eea;">Baixando... Aguarde!</p>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div class="downloads-section" id="downloadsSection" style="display: none;">
+            <h3>📂 Últimos Downloads</h3>
+            <div class="downloads-list" id="downloadsList"></div>
+            <div class="folder-path" id="folderPath"></div>
+        </div>
+    </div>
+
+    <script>
+        async function downloadVideo() {
+            const url = document.getElementById('url').value.trim();
+            const isPlaylist = document.getElementById('playlist').checked;
+            const messageDiv = document.getElementById('message');
+            const loading = document.querySelector('.loading');
+            const button = document.querySelector('button');
+
+            if (!url) {
+                showMessage('❌ Por favor, cole uma URL do YouTube!', 'error');
+                return;
+            }
+
+            messageDiv.style.display = 'none';
+            loading.style.display = 'block';
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        is_playlist: isPlaylist
+                    })
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+                button.disabled = false;
+
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    document.getElementById('url').value = '';
+                    setTimeout(() => listDownloads(), 1000);
+                } else {
+                    showMessage('❌ ' + data.error, 'error');
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                button.disabled = false;
+                showMessage('❌ Erro ao conectar com o servidor!', 'error');
+            }
+        }
+
+        async function listDownloads() {
+            try {
+                const response = await fetch('/list-downloads');
+                const data = await response.json();
+
+                if (data.success) {
+                    const section = document.getElementById('downloadsSection');
+                    const list = document.getElementById('downloadsList');
+                    const folderPath = document.getElementById('folderPath');
+
+                    if (data.files.length > 0) {
+                        list.innerHTML = data.files.map(file => `
+                            <div class="download-item">
+                                <div class="file-info">
+                                    <div class="file-name">🎬 ${file.name}</div>
+                                    <div class="file-size">📦 ${file.size}</div>
+                                </div>
+                            </div>
+                        `).join('');
+
+                        folderPath.innerHTML = `📁 <strong>Pasta:</strong> ${data.folder}`;
+                        section.style.display = 'block';
+                    } else {
+                        list.innerHTML = '<p style="text-align: center; color: #999;">Nenhum download ainda</p>';
+                        section.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao listar downloads:', error);
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+        }
+
+        // Permitir enviar com Enter
+        document.getElementById('url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                downloadVideo();
+            }
+        });
+
+        // Carregar lista ao abrir a página
+        window.addEventListener('load', listDownloads);
+    </script>
+</body>
+</html>
