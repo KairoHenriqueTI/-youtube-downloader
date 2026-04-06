@@ -38,24 +38,15 @@ def download_video():
         data = request.json
         url = data.get('url')
         is_playlist = data.get('is_playlist', False)
+        format_type = data.get('format_type', 'mp4')  # 'mp4' ou 'mp3'
         
         if not url:
             return jsonify({'success': False, 'error': 'URL não fornecida'}), 400
         
+        # Configurações base
         ydl_opts = {
-            'format': 'bv*+ba/b',  # Melhor vídeo + melhor áudio, ou melhor disponível
             'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
             'noplaylist': not is_playlist,
-            'merge_output_format': 'mp4',
-            'postprocessors': [
-                {
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                },
-                {
-                    'key': 'FFmpegMetadata',
-                }
-            ],
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'extractor_args': {
                 'youtube': {
@@ -73,6 +64,27 @@ def download_video():
             'no_warnings': False,
         }
         
+        # Configurar formato específico
+        if format_type == 'mp3':
+            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }]
+        else:  # mp4
+            ydl_opts['format'] = 'bv*+ba/b'
+            ydl_opts['merge_output_format'] = 'mp4'
+            ydl_opts['postprocessors'] = [
+                {
+                    'key': 'FFmpegVideoConvertor',
+                    'preferedformat': 'mp4',
+                },
+                {
+                    'key': 'FFmpegMetadata',
+                }
+            ]
+        
         # Usar cookies se existir
         if os.path.exists(COOKIES_FILE):
             ydl_opts['cookiefile'] = COOKIES_FILE
@@ -83,10 +95,10 @@ def download_video():
             if is_playlist:
                 videos = info.get('entries', [])
                 titles = [v.get('title', 'Unknown') for v in videos if v]
-                message = f'✅ Playlist baixada com sucesso! {len(titles)} vídeos baixados.'
+                message = f'✅ Playlist baixada com sucesso! {len(titles)} arquivos em {format_type.upper()}.'
             else:
                 title = info.get('title', 'Unknown')
-                message = f'✅ Vídeo "{title}" baixado com sucesso!'
+                message = f'✅ "{title}" baixado em {format_type.upper()}!'
         
         return jsonify({
             'success': True,
@@ -110,6 +122,7 @@ def download_video():
 def list_downloads():
     try:
         files = glob.glob(os.path.join(DOWNLOAD_FOLDER, '*.mp4'))
+        files += glob.glob(os.path.join(DOWNLOAD_FOLDER, '*.mp3'))
         files.sort(key=os.path.getmtime, reverse=True)
         
         file_list = []
