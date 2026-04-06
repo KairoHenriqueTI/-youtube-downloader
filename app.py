@@ -92,7 +92,8 @@ def download_video():
         # Configurar formato específico
         if format_type == 'mp3':
             logger.info("Configurando para download MP3")
-            ydl_opts['format'] = None  # Deixar yt-dlp escolher o melhor
+            # Tentar formatos de áudio em ordem de preferência
+            ydl_opts['format'] = 'bestaudio/best'
             ydl_opts['postprocessors'] = [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -101,9 +102,15 @@ def download_video():
             ydl_opts['writethumbnail'] = False
         else:  # mp4
             logger.info("Configurando para download MP4")
-            ydl_opts['format'] = None  # Deixar yt-dlp escolher o melhor
+            # Tentar diferentes formatos em ordem de preferência
+            # bestvideo+bestaudio = melhor vídeo + melhor áudio
+            # best = melhor qualidade disponível em arquivo único
+            # worst = pior qualidade (fallback final)
+            ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext=mp4]/best'
+            ydl_opts['merge_output_format'] = 'mp4'
             ydl_opts['postprocessors'] = [{
-                'key': 'FFmpegMetadata',
+                'key': 'FFmpegVideoConvertor',
+                'preferedformat': 'mp4',
             }]
         
         # Usar cookies se existir
@@ -155,6 +162,28 @@ def download_video():
         return jsonify({
             'success': False,
             'error': f'Erro ao baixar: {error_msg}'
+        }), 500
+
+@app.route('/delete-cookies', methods=['POST'])
+def delete_cookies():
+    try:
+        if os.path.exists(COOKIES_FILE):
+            os.remove(COOKIES_FILE)
+            logger.info("🗑️ Arquivo de cookies DELETADO pelo usuário")
+            return jsonify({
+                'success': True,
+                'message': '✅ Cookies removidos com sucesso!'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '⚠️ Nenhum arquivo de cookies encontrado'
+            })
+    except Exception as e:
+        logger.error(f"Erro ao deletar cookies: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'❌ Erro ao deletar cookies: {str(e)}'
         }), 500
 
 @app.route('/list-downloads')

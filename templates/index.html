@@ -249,7 +249,11 @@
         <div class="input-group">
             <label for="cookiesFile">🍪 Upload de Cookies (necessário se der erro):</label>
             <input type="file" id="cookiesFile" accept=".txt" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; width: 100%;">
-            <button onclick="uploadCookies()" style="margin-top: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">📤 Enviar Cookies</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="uploadCookies()" style="flex: 1; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">📤 Enviar Cookies</button>
+                <button onclick="deleteCookies()" style="flex: 1; background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);">🗑️ Remover Cookies</button>
+            </div>
+            <div id="cookiesStatus" style="margin-top: 10px; font-size: 0.9em;"></div>
         </div>
 
         <div class="input-group">
@@ -423,8 +427,51 @@
             }
         }
 
+        // Deletar cookies
+        async function deleteCookies() {
+            if (!confirm('🗑️ Tem certeza que deseja remover os cookies?\n\nIsso pode causar erros de bloqueio se você tentar baixar vídeos que exigem autenticação.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/delete-cookies', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    updateCookiesStatus(false);
+                } else {
+                    showMessage(data.message || '❌ Erro ao deletar cookies', 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erro ao conectar com o servidor!', 'error');
+            }
+        }
+
+        // Atualizar status dos cookies
+        function updateCookiesStatus(hasCookies) {
+            const statusDiv = document.getElementById('cookiesStatus');
+            if (hasCookies) {
+                statusDiv.innerHTML = '✅ <span style="color: #28a745;">Cookies carregados!</span>';
+            } else {
+                statusDiv.innerHTML = '⚠️ <span style="color: #ffc107;">Nenhum cookie carregado</span>';
+            }
+        }
+
         // Carregar lista ao abrir a página
-        window.addEventListener('load', listDownloads);
+        window.addEventListener('load', () => {
+            listDownloads();
+            // Verificar status dos cookies
+            fetch('/list-downloads')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        updateCookiesStatus(data.has_cookies);
+                    }
+                });
+        });
     </script>
 </body>
 </html>
