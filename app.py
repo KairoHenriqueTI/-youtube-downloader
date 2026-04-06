@@ -35,11 +35,10 @@ def download_video():
                 'preferedformat': 'mp4',
             }],
             # Opções para evitar detecção de bot
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'user_agent': 'com.google.android.youtube/19.09.37',
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android_creator'],
-                    'skip': ['hls', 'dash'],
+                    'player_client': ['android'],
                 }
             },
             'http_headers': {
