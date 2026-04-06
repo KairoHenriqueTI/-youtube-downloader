@@ -92,7 +92,7 @@ def download_video():
         # Configurar formato específico
         if format_type == 'mp3':
             logger.info("Configurando para download MP3")
-            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['format'] = None  # Deixar yt-dlp escolher o melhor
             ydl_opts['postprocessors'] = [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -101,7 +101,7 @@ def download_video():
             ydl_opts['writethumbnail'] = False
         else:  # mp4
             logger.info("Configurando para download MP4")
-            ydl_opts['format'] = 'best'
+            ydl_opts['format'] = None  # Deixar yt-dlp escolher o melhor
             ydl_opts['postprocessors'] = [{
                 'key': 'FFmpegMetadata',
             }]
