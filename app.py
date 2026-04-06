@@ -72,18 +72,12 @@ def download_video():
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }]
+            ydl_opts['writethumbnail'] = False
         else:  # mp4
-            ydl_opts['format'] = 'bv*+ba/b'
-            ydl_opts['merge_output_format'] = 'mp4'
-            ydl_opts['postprocessors'] = [
-                {
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                },
-                {
-                    'key': 'FFmpegMetadata',
-                }
-            ]
+            ydl_opts['format'] = 'best'  # Formato mais simples primeiro
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegMetadata',
+            }]
         
         # Usar cookies se existir
         if os.path.exists(COOKIES_FILE):
