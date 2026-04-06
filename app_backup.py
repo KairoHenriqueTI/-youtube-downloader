@@ -7,36 +7,18 @@ from pathlib import Path
 app = Flask(__name__)
 
 DOWNLOAD_FOLDER = str(Path.home() / 'Downloads' / 'youtube-videos')
-COOKIES_FILE = os.path.join('/var/www/youtube-downloader', 'cookies.txt')
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/upload-cookies', methods=['POST'])
-def upload_cookies():
-    try:
-        if 'cookies' not in request.files:
-            return jsonify({'success': False, 'error': 'Nenhum arquivo enviado'}), 400
-        
-        file = request.files['cookies']
-        if file.filename == '':
-            return jsonify({'success': False, 'error': 'Arquivo vazio'}), 400
-        
-        file.save(COOKIES_FILE)
-        return jsonify({
-            'success': True,
-            'message': '✅ Cookies salvos! Agora os downloads devem funcionar.'
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
 @app.route('/download', methods=['POST'])
 def download_video():
     try:
         data = request.json
         url = data.get('url')
+        format_type = data.get('format', 'mp4')
         is_playlist = data.get('is_playlist', False)
         
         if not url:
@@ -52,26 +34,24 @@ def download_video():
                 'key': 'FFmpegVideoConvertor',
                 'preferedformat': 'mp4',
             }],
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            # Opções para evitar detecção de bot
+            'user_agent': 'com.google.android.youtube/19.09.37',
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'web'],
+                    'player_client': ['android'],
                 }
             },
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-us,en;q=0.5',
                 'Sec-Fetch-Mode': 'navigate',
             },
             'nocheckcertificate': True,
+            'age_limit': None,
             'quiet': False,
             'no_warnings': False,
         }
-        
-        # Usar cookies se existir
-        if os.path.exists(COOKIES_FILE):
-            ydl_opts['cookiefile'] = COOKIES_FILE
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -91,15 +71,9 @@ def download_video():
         })
     
     except Exception as e:
-        error_msg = str(e)
-        if 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower():
-            return jsonify({
-                'success': False,
-                'error': '❌ Bloqueio detectado! Você precisa fazer upload dos cookies do seu navegador. Veja as instruções acima.'
-            }), 500
         return jsonify({
             'success': False,
-            'error': f'Erro ao baixar: {error_msg}'
+            'error': f'Erro ao baixar: {str(e)}'
         }), 500
 
 @app.route('/list-downloads')
@@ -109,7 +83,7 @@ def list_downloads():
         files.sort(key=os.path.getmtime, reverse=True)
         
         file_list = []
-        for f in files[:20]:
+        for f in files[:20]:  # Últimos 20 arquivos
             file_list.append({
                 'name': os.path.basename(f),
                 'size': f"{os.path.getsize(f) / (1024*1024):.1f} MB",
@@ -119,8 +93,7 @@ def list_downloads():
         return jsonify({
             'success': True,
             'files': file_list,
-            'folder': DOWNLOAD_FOLDER,
-            'has_cookies': os.path.exists(COOKIES_FILE)
+            'folder': DOWNLOAD_FOLDER
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

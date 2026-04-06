@@ -234,8 +234,22 @@
         <div class="info-box">
             💡 <strong>Dicas:</strong><br>
             • Os vídeos serão salvos na pasta Downloads automaticamente!<br>
-            • Se algum vídeo não funcionar, tente outro - alguns têm proteção extra do YouTube<br>
+            • <strong>Se der erro de bot:</strong> Faça upload dos cookies do YouTube (veja instruções abaixo)<br>
             • Funciona melhor com vídeos públicos e playlists de música
+        </div>
+
+        <div class="info-box" style="background: #fff3cd; border-color: #ffc107; margin-bottom: 20px;">
+            🔧 <strong>Como Corrigir Erro de Bot:</strong><br>
+            1. Instale a extensão "<a href="https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank">Get cookies.txt LOCALLY</a>" no Chrome<br>
+            2. Acesse <a href="https://youtube.com" target="_blank">youtube.com</a> e faça login<br>
+            3. Clique na extensão e exporte os cookies<br>
+            4. Faça upload do arquivo aqui embaixo ⬇️
+        </div>
+
+        <div class="input-group">
+            <label for="cookiesFile">🍪 Upload de Cookies (necessário se der erro):</label>
+            <input type="file" id="cookiesFile" accept=".txt" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; width: 100%;">
+            <button onclick="uploadCookies()" style="margin-top: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">📤 Enviar Cookies</button>
         </div>
 
         <div class="input-group">
@@ -361,6 +375,37 @@
                 downloadVideo();
             }
         });
+
+        // Upload de cookies
+        async function uploadCookies() {
+            const fileInput = document.getElementById('cookiesFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showMessage('❌ Selecione um arquivo de cookies primeiro!', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('cookies', file);
+
+            try {
+                const response = await fetch('/upload-cookies', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    fileInput.value = '';
+                } else {
+                    showMessage('❌ ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Erro ao enviar cookies!', 'error');
+            }
+        }
 
         // Carregar lista ao abrir a página
         window.addEventListener('load', listDownloads);
